@@ -32,6 +32,8 @@
   </ul>
   </p>
 </p>
+<br clear="left">
+</br></br>
 
 ## 클라우드 기반 컴퓨팅 모델
 
@@ -39,4 +41,3 @@
 - PaaS(Platform as a Service)
 - SaaS(Software as a Service)
 
-<br clear="left">
