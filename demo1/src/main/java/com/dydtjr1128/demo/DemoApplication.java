@@ -20,6 +20,8 @@ public class DemoApplication {
     @RequestMapping(value = "/{firstName}/{lastName}", method = RequestMethod.GET)
     public String hello(@PathVariable("firstName") String firstName, @PathVariable("lastName") String lastName) {
 
+
+        //return "redirect:https://www.naver.com";
         return String.format("{\"message\":\"Hello %s %s\"}", firstName, lastName);
     }
 }
