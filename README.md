@@ -42,6 +42,81 @@
 - SaaS(Software as a Service)
 ![image](https://user-images.githubusercontent.com/19161231/54671593-8ea66780-4b39-11e9-80f9-eb5e25a5f4ae.png)
 
->dd
->>dd
->>>ddd
+
+
+## Redis
+
+Redis는 In-memory 기반의 NoSQL DBMS로서 Key-Value의 구조를 가지고있다.
+또한 속도가 빠르고사용이 간편하다. 캐싱,세션관리,pub/sub 메시징 처리등에 사용된다.
+
+Spring에서 Redis를 사용하기위한 라이브러리는 2가지가있다.
+ - jedis
+ - lettuce
+ 
+ jedis는 thread-safe하지 않기 때문에  jedis-pool을 사용해야하지만 비용이 증가하기 때문에 lettuce를 많이 사용한다.
+ 
+ ```
+ <dependency>
+     <groupId>org.springframework.boot</groupId>
+     <artifactId>spring-boot-starter-data-redis</artifactId>
+ </dependency>
+ ```
+ 
+ ```java
+@Configuration
+public class RedisConfiguration {
+    
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory();
+        return lettuceConnectionFactory;
+    }
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        return redisTemplate;
+    }
+ 
+}
+```
+
+`ettuceConnectionFactory.setHost("192.168.0.78")` 및 ` .setPassword("password");`를 이용해 설정할 수 있으나 
+ application.properties나 .yml 파일에 설정하는것을 권장한다.
+ 
+ ```
+ spring.redis.lettuce.pool.max-active=10
+ spring.redis.lettuce.pool.max-idle=10
+ spring.redis.lettuce.pool.min-idle=2
+ spring.redis.port=6379
+ spring.redis.host=127.0.0.1
+ ```
+ 
+ ### Redis 사용 예제
+ ```java
+@Service
+public class GetSetService {
+    
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
+    
+    public void test() {
+        //hashmap같은 key value 구조
+        ValueOperations<String, Object> vop = redisTemplate.opsForValue();
+        vop.set("jdkSerial", "jdk");
+        String result = (String) vop.get("jdkSerial");
+        System.out.println(result);//jdk
+    }
+}
+```
+ 위와같은경우 직렬화를 하여 바이트로 저장하기 때문에 출력시 이상한 문자열이 출력 될 수 있다.
+ json등을 이용하여 해결 가능하다.
+ 
+ 
+ 
+ 
+ 
+ ## Reference
+ - https://woowabros.github.io/experience/2017/10/17/java-serialize2.html
+ - https://jeong-pro.tistory.com/175
