@@ -1,0 +1,10 @@
+server:
+  port: 8888
+spring:
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///Users/CYSN/IdeaProjects/Springboot_study/demo3/src/main/resources/config/licensingservice
