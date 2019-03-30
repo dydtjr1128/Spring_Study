@@ -93,7 +93,7 @@ public class RedisConfiguration {
  spring.redis.host=127.0.0.1
  ```
  
- ### Redis 사용 예제
+ #### Redis 사용 예제
  ```java
 @Service
 public class GetSetService {
@@ -110,10 +110,70 @@ public class GetSetService {
     }
 }
 ```
- 위와같은경우 직렬화를 하여 바이트로 저장하기 때문에 출력시 이상한 문자열이 출력 될 수 있다.
+ 위와 같은 경우 직렬화를 하여 바이트로 저장하기 때문에 출력시 이상한 문자열이 출력 될 수 있다.
  json등을 이용하여 해결 가능하다.
  
  
+ ```java
+@Configuration
+public class RedisConfiguration {
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory();
+        return lettuceConnectionFactory;
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(MyData.class));
+        return redisTemplate;
+    }
+
+}
+```
+위와 같이 `setValueSerializer()` 메서드를 사용하여 직렬화 를 설정 할 수 있다.
+
+#### 여기서 `Jackson`이란?
+`Jackson`은 text/html 형태의 문자가 아닌 객체등의 데이터를 JSON으로 처리해 주는 라이브러리 이다.
+Jackson 외에 Google 에서 만든 `GSON`과 그밖에 `SimpleJSON` 등이 있다.
+`Spring 3.0` 이후부터는 내부적으로 Jackson 관련 API 제공을 통하여 자동화 처리가 가능하도록 도와주었다.
+ 
+ ##### Mydata.java
+ ```java
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+public class MyData implements Serializable {
+    private static final long serialVersionUID = -7353484588260422449L;
+    private String studentId;
+    private String name;
+}
+```
+##### DataService.java
+```java
+@Service
+public class DataService {
+    @Autowired
+    RedisTemplate<String, Object> redisTemplate;
+
+    public void test() {
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        MyData data = new MyData();
+        data.setStudentId("1234566");
+        data.setName("HongGilDong");
+        valueOperations.set("key", data);
+
+        MyData data2 = (MyData) valueOperations.get("key");
+        System.out.println(data2);
+    }
+}
+```
  
  
  
