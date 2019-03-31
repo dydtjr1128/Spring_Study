@@ -174,7 +174,61 @@ public class DataService {
     }
 }
 ```
- 
+
+#### Redis Publish/Subscribe
+##### RedisConfiguration.java
+```java
+@Configuration
+public class RedisConfiguration {
+
+    @Bean
+    public RedisConnectionFactory redisConnectionFactory() {
+        LettuceConnectionFactory lettuceConnectionFactory = new LettuceConnectionFactory();
+        return lettuceConnectionFactory;
+    }
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate() {
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(MyData.class));
+        return redisTemplate;
+    }
+
+    @Bean
+    MessageListenerAdapter messageListenerAdapter() {
+        return new MessageListenerAdapter(new RedisService());
+    }
+
+    @Bean
+    RedisMessageListenerContainer redisContainer() {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory());
+        container.addMessageListener(messageListenerAdapter(), topic());
+        return container;
+    }
+
+    @Bean
+    ChannelTopic topic() {
+        return new ChannelTopic("Event");
+    }
+}
+```
+##### RedisService.java
+```java
+@Service
+public class RedisService implements MessageListener {
+    public static List<String> messageList = new ArrayList<String>();
+
+    @Override
+    public void onMessage(Message message, byte[] pattern) {
+        messageList.add(message.toString());
+        System.out.println("Message received: " + message.toString());
+    }
+}
+```
+Subscribe를 하기 위해 서비스를 만들고, 토픽을 추가시켜주어야 한다.
  
  
  ## Reference
